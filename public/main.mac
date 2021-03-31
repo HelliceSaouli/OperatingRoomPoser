@@ -1,0 +1,160 @@
+############################
+# VISUALIZATION PARAMETERS #
+############################
+
+/control/execute  macro/Visu.mac
+
+#############
+# VERBOSITY #
+#############
+
+/control/verbose            0
+/run/verbose                1
+/run/particle/verbose       0
+
+/event/verbose              0
+/tracking/verbose           0
+
+/gate/generator/verbose     0
+/gate/source/verbose        0
+
+/gate/verbose               Actor   0 
+
+
+#########################
+# SET MATERIAL DATABASE #
+#########################
+/gate/geometry/setMaterialDatabase data/materials/GateMaterials.db
+
+
+#########
+# WORLD #
+#########
+/gate/world/geometry/setYLength             WorldSizeY mm
+/gate/world/geometry/setXLength             WorldSizeX mm
+/gate/world/geometry/setZLength             WorldSizeZ mm
+/gate/world/setMaterial                     WorldMatrial
+/gate/world/vis/setVisible                  1
+/gate/world/vis/forceWireframe
+
+###################################
+# The voxelized room              #
+###################################
+
+# Room
+/gate/world/daughters/name            Room
+/gate/world/daughters/insert          box
+/gate/Room/geometry/setXLength        RoomSizeX mm
+/gate/Room/geometry/setYLength        RoomSizeY mm
+/gate/Room/geometry/setZLength        RoomSizeZ mm
+/gate/Room/placement/setTranslation   0. 0. 0. mm
+/gate/Room/setMaterial                RoomMatrial
+/gate/Room/vis/setVisible             1
+/gate/Room/vis/setColor               white
+/gate/Room/vis/forceWireframe   
+
+# Voxelized room
+/gate/Room/daughters/name                         VoxRoom
+/gate/Room/daughters/insert                       ImageNestedParametrisedVolume
+/gate/VoxRoom/geometry/setImage                   data/mergevolumephantom/RoomVox_25mm_160.mhd
+/gate/VoxRoom/geometry/setRangeToMaterialFile     data/materials/HU2room.dat
+/gate/VoxRoom/placement/setTranslation            0. 0. 0. mm
+/gate/VoxRoom/vis/setVisible                      0
+
+###################################
+# Phantom inside the room         #
+###################################
+
+# Patient
+/gate/Room/daughters/name                         Patient
+/gate/Room/daughters/insert                       ImageNestedParametrisedVolume
+/gate/Patient/geometry/setImage                   data/patient/HenryDec4_cropped.mhd
+/gate/Patient/geometry/setRangeToMaterialFile     data/materials/HU2prostate.dat
+/gate/Patient/placement/setTranslation            0. -150. 0 mm
+#/gate/Patient/placement/setRotationAxis			  0 1 0 
+#/gate/Patient/placement/setRotationAngle			180 deg 
+
+
+
+
+
+
+# Flat panel detector
+/control/execute                           macro/Detector/Detector_{orbital}_{angular}.mac
+
+
+
+###################################
+# Merge the objs inside the room  #
+###################################
+
+/gate/actor/addActor                              MergedVolumeActor     MergedRoom
+/gate/actor/MergedRoom/attachTo                   Room
+/gate/actor/MergedRoom/volumeToMerge              FlatPanel,Patient 
+###########
+# PHYSICS #Pa
+###########
+
+/gate/physics/addPhysicsList emstandard_opt3
+
+/gate/physics/setEMin 990 eV
+/gate/physics/setEMax 250 MeV
+
+/gate/physics/setDEDXBinning 300
+/gate/physics/setLambdaBinning 300
+
+/gate/physics/Electron/SetCutInRegion  world 10 m
+/gate/physics/Gamma/SetCutInRegion     world 10 m
+
+#/gate/physics/print physics.txt
+
+
+###################################
+# Image                           #
+###################################
+
+#/gate/actor/addActor                              FluenceActor  FluenceDetector
+#/gate/actor/FluenceDetector/attachTo              aSiLayer
+#/gate/actor/FluenceDetector/stepHitType           pre
+#/gate/actor/FluenceDetector/setResolution         300 1 300
+#/gate/actor/FluenceDetector/save                  output_1/ImageDetector_{cseed}_{orbital}_{angular}.mhd
+
+/gate/actor/addActor                          FluenceActor  FluenceRoom
+/gate/actor/FluenceRoom/attachTo              Room
+/gate/actor/FluenceRoom/stepHitType           pre
+/gate/actor/FluenceRoom/setResolution         160 96 160
+/gate/actor/FluenceRoom/enableNumberOfHits    true
+#/gate/actor/FluenceRoom/enableEnergyWeighting true
+#/gate/actor/FluenceRoom/enableMomentum true
+/gate/actor/FluenceRoom/enableUncertainty true
+#/gate/actor/FluenceRoom/save                  output/Room_orbital_{orbital}_angular_{angular}_{cseed}.mhd
+
+##################
+# INITIALIZATION #
+##################
+
+/gate/run/initialize
+
+##############
+# SOURCE GPS #
+##############
+
+/control/execute                               macro/Source/Source_{orbital}_{angular}.mac
+
+/gate/source/list
+
+###############
+# RANDOM      #
+###############
+
+/gate/random/setEngineName MersenneTwister
+#/gate/random/setEngineSeed {cseed}
+
+###############
+# START       #
+###############
+
+/gate/application/setNumberOfPrimariesPerRun  1000000
+/gate/application/startDAQ
+
+exit

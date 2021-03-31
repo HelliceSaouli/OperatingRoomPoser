@@ -1,0 +1,28 @@
+{
+  "name": "phollow2",
+  "version": "2.0.0",
+  "description": "This is poser based on webgl and Three.js",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "poser",
+    "rigging",
+    "webgl"
+  ],
+  "author": "Abdelhak SAOULI",
+  "license": "ISC",
+  "dependencies": {
+    "ami.js": "^0.33.0",
+    "express": "^4.17.1",
+    "filepond": "^4.23.1",
+    "install": "^0.13.0",
+    "three": "^0.120.1",
+    "three-stlexporter": "^1.0.0"
+  },
+  "devDependencies": {
+    "electron": "^11.4.1"
+  }
+}
